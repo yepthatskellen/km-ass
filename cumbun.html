@@ -502,10 +502,6 @@
 ═══════════════════════════════════════════════════════════ */
 const STORAGE_KEY     = 'kanbanCumbun@v3';
 const DEFAULT_COLUMNS = ['todo','doing','done'];
-const WONDER_TEXT     = 'wonder about my day';
-const WONDER_URL      = 'https://worthwonder.com';
-const WONDER_NOTES    = 'Browse questions that will align myself with my day.';
-
 const $ = id => document.getElementById(id);
 
 let state, isDirty = false, cardOpsSinceSave = 0;
@@ -525,28 +521,6 @@ function makeCard(text) { return { id: `c_${state.counter++}`, text: text || 'Un
 state = loadState() || { counter: 1, viewSort: 'created', boards: [makeBoard('Personal')] };
 if (!state.viewSort) state.viewSort = 'created';
 state.boards.forEach(b => { if (!('updatedAt' in b)) b.updatedAt = null; });
-
-/* ── Wonder card ───────────────────────────── */
-function ensurePersonalBoard() {
-  let p = state.boards.find(b => (b.name || '').trim().toLowerCase() === 'personal');
-  if (!p) { p = makeBoard('Personal'); state.boards.unshift(p); }
-  return p;
-}
-function ensureWonderCard() {
-  const p = ensurePersonalBoard();
-  let ex = null, exCol = null;
-  for (const k of DEFAULT_COLUMNS) {
-    const f = (p.columns[k] || []).find(c => (c.text || '').trim() === WONDER_TEXT);
-    if (f) { ex = f; exCol = k; break; }
-  }
-  if (!ex) { const c = makeCard(WONDER_TEXT); c.notes = WONDER_NOTES; c.linkUrl = WONDER_URL; p.columns.todo.unshift(c); return; }
-  if ((ex.notes||'') !== WONDER_NOTES) ex.notes = WONDER_NOTES;
-  if ((ex.linkUrl||'') !== WONDER_URL) ex.linkUrl = WONDER_URL;
-  if (exCol !== 'todo') { p.columns[exCol] = p.columns[exCol].filter(c => c.id !== ex.id); p.columns.todo.unshift(ex); }
-  else { p.columns.todo = [ex, ...p.columns.todo.filter(c => c.id !== ex.id)]; }
-}
-ensureWonderCard(); saveState();
-
 /* ── Dirty tracking ────────────────────────── */
 function markDirty(n=1) { isDirty=true; cardOpsSinceSave+=n; updateSaveStatus(); }
 function markDirtyMeta() { isDirty=true; updateSaveStatus(); }
@@ -792,7 +766,7 @@ $('emailBtn').addEventListener('click', emailAll);
 const uploadInput=$('uploadInput');
 uploadInput.addEventListener('change', async e=>{
   const file=e.target.files[0];if(!file)return;
-  try{const t=await file.text();const p=JSON.parse(t);if(!p?.boards||!Array.isArray(p.boards)){alert('Not a valid export.');return;}state=p;if(!state.viewSort)state.viewSort='created';state.boards.forEach(b=>{if(!('updatedAt' in b))b.updatedAt=null;});ensureWonderCard();saveState();render();clearDirty();}
+  try{const t=await file.text();const p=JSON.parse(t);if(!p?.boards||!Array.isArray(p.boards)){alert('Not a valid export.');return;}state=p;if(!state.viewSort)state.viewSort='created';state.boards.forEach(b=>{if(!('updatedAt' in b))b.updatedAt=null;});saveState();render();clearDirty();}
   catch{alert("Couldn't read that file.");}uploadInput.value='';
 });
 
@@ -1142,8 +1116,8 @@ function render() {
    https://github.com/yepthatskellen/cumbun/tree/main/secrets/
 ════════════════════════════════════════════════════════════════ */
 (function initSecretCodes() {
-  const REPO_BASE = 'https://km-ass.com/secrets/';
-  const FILE_EXT = '.js';
+  const REPO_BASE = 'https://raw.githubusercontent.com/yepthatskellen/cumbun/main/secrets/';
+  const FILE_EXT = '.json';
   const MAX_BUFFER = 32;   // max code length
   const IDLE_RESET = 2400; // ms of no typing → reset buffer
 
