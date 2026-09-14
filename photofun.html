@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>Curate — km-ass.com</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Raleway:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --crimson: #7a1e2e;
+  --crimson-light: #a02840;
+  --crimson-deep: #4d1020;
+  --cream: #f0ebe0;
+  --cream-dark: #e0d9cc;
+  --cream-mid: #ede7d9;
+  --ink: #1e1a18;
+  --ink-soft: #3a3330;
+  --gold: #b8955a;
+  --gold-light: #d4b07a;
+  --muted: rgba(30,26,24,0.45);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: 'Raleway', sans-serif;
+  font-weight: 300;
+  cursor: none;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+  overflow-x: hidden;
+}
+
+/* grain */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 1000; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 200px 200px; opacity: 0.35;
+}
+
+/* cursor */
+.cursor {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--crimson); position: fixed;
+  pointer-events: none; z-index: 9999;
+  transform: translate(-50%,-50%);
+  transition: width .2s, height .2s, opacity .2s;
+}
+.cursor-ring {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid var(--crimson); position: fixed;
+  pointer-events: none; z-index: 9998;
+  transform: translate(-50%,-50%);
+  transition: all .15s ease; opacity: 0.5;
+}
+
+/* crimson top bar */
+body::after {
+  content: '';
+  position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 500;
+  background: linear-gradient(90deg, var(--crimson), var(--gold), var(--crimson));
+}
+
+/* ─── SETUP SCREEN ─────────────────────────────── */
+#setup {
+  min-height: 100dvh;
+  display: flex; align-items: center; justify-content: center;
+  padding: 60px 28px calc(48px + env(safe-area-inset-bottom));
+  position: relative; overflow: hidden;
+}
+
+/* decorative SVG figure behind setup */
+.setup-figure {
+  position: absolute; right: -40px; top: 0; bottom: 0;
+  width: 48%; pointer-events: none; z-index: 0;
+  opacity: 0.11;
+}
+
+.setup-card {
+  width: 100%; max-width: 560px; position: relative; z-index: 1;
+}
+
+.km-eyebrow {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 32px;
+}
+.km-logo {
+  font-family: 'Raleway', sans-serif; font-size: 11px;
+  font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--crimson); border: 1px solid var(--crimson);
+  padding: 4px 11px; border-radius: 1px;
+}
+.km-rule { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(184,149,90,0.3), transparent); }
+.km-tag { font-size: 10px; letter-spacing: 0.14em; color: var(--gold); font-family: 'Raleway', sans-serif; font-weight: 400; }
+
+h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(40px, 8vw, 72px);
+  font-weight: 300; line-height: 1.05; letter-spacing: -0.02em;
+  color: var(--ink); margin-bottom: 8px;
+}
+h1 em { font-style: italic; color: var(--crimson); }
+
+.sub {
+  font-family: 'Cormorant Garamond', serif; font-style: italic;
+  font-size: 18px; font-weight: 300; line-height: 1.7;
+  color: var(--ink-soft); max-width: 42ch; margin-bottom: 36px;
+}
+
+.field-label {
+  display: block; font-size: 9px; font-weight: 600;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 8px;
+}
+
+textarea {
+  width: 100%; height: 200px; resize: vertical;
+  background: var(--cream-mid); border: 1px solid rgba(184,149,90,0.25);
+  border-radius: 2px; color: var(--ink);
+  font-family: 'Raleway', sans-serif; font-size: 12px;
+  font-weight: 300; line-height: 1.7; padding: 14px 16px;
+  outline: none; transition: border-color .2s;
+}
+textarea::placeholder { color: rgba(30,26,24,0.3); }
+textarea:focus { border-color: var(--crimson); }
+
+.hint-note {
+  font-size: 11px; color: var(--muted); margin-top: 10px;
+  font-family: 'Raleway', sans-serif; font-weight: 300;
+  line-height: 1.6;
+}
+.hint-note strong { color: var(--gold); font-weight: 500; }
+
+.fill-toggle {
+  display: inline-flex; align-items: center; gap: 9px;
+  margin: 18px 0 24px; cursor: none;
+  font-size: 12px; font-weight: 400; color: var(--ink-soft);
+  user-select: none;
+}
+.fill-toggle .dot {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 1px solid rgba(122,30,46,0.3);
+  display: grid; place-items: center; transition: .15s;
+}
+.fill-toggle .dot::after {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--crimson); opacity: 0; transition: .15s;
+}
+.fill-toggle[aria-pressed="true"] .dot { border-color: var(--crimson); }
+.fill-toggle[aria-pressed="true"] .dot::after { opacity: 1; }
+
+.btn-row { display: flex; gap: 12px; align-items: center; }
+
+.btn-primary {
+  flex: 1; background: var(--crimson); color: var(--cream);
+  font-family: 'Raleway', sans-serif; font-size: 11px;
+  font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase;
+  padding: 16px 28px; border: none; cursor: none;
+  transition: background .25s; position: relative; overflow: hidden;
+}
+.btn-primary::before {
+  content: ''; position: absolute; inset: 0;
+  background: var(--crimson-deep); transform: scaleX(0);
+  transform-origin: left; transition: transform .25s;
+}
+.btn-primary:not(:disabled):hover::before { transform: scaleX(1); }
+.btn-primary span { position: relative; z-index: 1; }
+.btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.btn-ghost {
+  background: transparent; color: var(--ink-soft);
+  font-family: 'Raleway', sans-serif; font-size: 11px;
+  font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase;
+  padding: 16px 20px; border: 1px solid rgba(30,26,24,0.18);
+  cursor: none; transition: border-color .2s, color .2s;
+}
+.btn-ghost:hover { border-color: var(--crimson); color: var(--crimson); }
+
+.count-bar {
+  margin-top: 18px; font-size: 12px; font-weight: 300;
+  color: var(--muted); font-family: 'Raleway', sans-serif; line-height: 1.7;
+}
+.count-bar b { color: var(--gold); font-weight: 500; }
+.count-bar u { color: var(--crimson); text-decoration: none; }
+
+/* ─── VIEWER ─────────────────────────────────────── */
+#viewer {
+  position: fixed; inset: 0; background: #000;
+  display: none; touch-action: none;
+  overscroll-behavior: none; overflow: hidden;
+}
+#viewer.on { display: block; }
+
+#deck { position: absolute; inset: 0; }
+#deck.moving .slide { will-change: transform; }
+
+.slide {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.slide img {
+  max-width: 100%; max-height: 100%; width: 100%; height: 100%;
+  object-fit: contain; display: block; background: #000;
+  opacity: 0; transition: opacity .18s;
+}
+.slide img.in { opacity: 1; }
+body.cover .slide img { object-fit: cover; }
+
+.broken {
+  font-family: 'Raleway', sans-serif; font-size: 12px; font-weight: 300;
+  color: rgba(240,235,224,0.5); text-align: center;
+  padding: 0 32px; line-height: 1.8; word-break: break-all; max-width: 520px;
+}
+.broken strong { color: var(--crimson); display: block; margin-bottom: 10px;
+  font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; font-size: 10px; }
+.broken a { color: var(--gold); }
+
+.spin {
+  position: absolute; width: 22px; height: 22px;
+  border: 1.5px solid rgba(240,235,224,0.15);
+  border-top-color: var(--gold); border-radius: 50%;
+  animation: sp .8s linear infinite;
+}
+@keyframes sp { to { transform: rotate(360deg); } }
+
+/* HUD */
+.hud {
+  position: absolute; left: 0; right: 0; z-index: 10;
+  pointer-events: none; display: flex; align-items: center; gap: 10px;
+  padding: 0 18px; transition: opacity .3s;
+}
+.hud.top {
+  top: 0; height: 68px;
+  padding-top: calc(10px + env(safe-area-inset-top));
+}
+.hud.bot {
+  bottom: 0; height: 80px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  justify-content: center; flex-direction: column; gap: 4px;
+}
+.hud button { pointer-events: auto; cursor: none; }
+#viewer.idle .hud { opacity: 0; }
+
+.pos-badge {
+  font-family: 'Raleway', sans-serif; font-size: 10px;
+  font-weight: 500; letter-spacing: 0.14em;
+  color: var(--cream); background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(8px); padding: 5px 12px;
+  border-radius: 1px;
+}
+.pos-badge i { font-style: normal; opacity: 0.45; }
+
+.tools { margin-left: auto; display: flex; gap: 8px; }
+
+.tool {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(0,0,0,0.45); backdrop-filter: blur(8px);
+  display: grid; place-items: center;
+  color: rgba(240,235,224,0.8); font-size: 14px; cursor: none;
+  border: 1px solid transparent; transition: all .15s;
+}
+.tool:hover { border-color: rgba(184,149,90,0.4); }
+.tool[aria-pressed="true"] { background: rgba(122,30,46,0.7); color: var(--cream); }
+
+.swipe-hints {
+  display: flex; gap: 28px; align-items: center;
+}
+.sh {
+  display: flex; align-items: center; gap: 6px;
+  font-family: 'Raleway', sans-serif; font-size: 9px;
+  font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase;
+  color: rgba(240,235,224,0.4);
+}
+.sh .arrow { font-size: 14px; }
+.sh.love { color: rgba(184,149,90,0.7); }
+
+/* LOVE overlay — flashes when swiped up */
+#love-flash {
+  position: fixed; inset: 0; z-index: 200; pointer-events: none;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .15s;
+}
+#love-flash.show { opacity: 1; }
+.love-inner {
+  text-align: center; transform: scale(0.8); transition: transform .2s;
+}
+#love-flash.show .love-inner { transform: scale(1); }
+.love-glyph {
+  font-size: 72px; line-height: 1; color: var(--gold);
+  text-shadow: 0 0 40px rgba(184,149,90,0.6);
+}
+.love-label {
+  font-family: 'Cormorant Garamond', serif; font-style: italic;
+  font-size: 18px; font-weight: 300; color: var(--cream);
+  margin-top: 8px; letter-spacing: 0.06em;
+}
+
+/* SKIP/NEXT overlay — flashes on ← swipe */
+#skip-flash {
+  position: fixed; inset: 0; z-index: 200; pointer-events: none;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .15s;
+}
+#skip-flash.show { opacity: 1; }
+
+/* ─── WISHLIST PANEL ──────────────────────────── */
+#wishlist-btn {
+  position: fixed; bottom: calc(20px + env(safe-area-inset-bottom));
+  right: 20px; z-index: 100;
+  display: none; /* shown when items added */
+  align-items: center; gap: 8px;
+  background: rgba(122,30,46,0.92); backdrop-filter: blur(12px);
+  color: var(--cream); border: 1px solid rgba(240,235,224,0.15);
+  font-family: 'Raleway', sans-serif; font-size: 10px;
+  font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase;
+  padding: 10px 16px; border-radius: 1px; cursor: none;
+  transition: background .2s;
+}
+#wishlist-btn.visible { display: flex; }
+#wishlist-btn:hover { background: rgba(77,16,32,0.95); }
+#wishlist-count {
+  background: var(--gold); color: var(--ink);
+  width: 18px; height: 18px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 10px; font-weight: 700;
+}
+
+#wishlist-panel {
+  position: fixed; inset: 0; z-index: 300;
+  display: none; align-items: flex-end; justify-content: flex-end;
+  padding: 20px;
+}
+#wishlist-panel.open { display: flex; }
+.wp-backdrop {
+  position: absolute; inset: 0; background: rgba(30,26,24,0.6);
+  backdrop-filter: blur(4px);
+}
+.wp-card {
+  position: relative; z-index: 1;
+  background: var(--cream); width: 100%; max-width: 440px;
+  max-height: calc(90dvh - 40px);
+  display: flex; flex-direction: column;
+  border: 1px solid rgba(184,149,90,0.2);
+  box-shadow: 0 24px 80px rgba(30,26,24,0.25);
+}
+.wp-header {
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid rgba(184,149,90,0.15);
+  display: flex; align-items: flex-start; justify-content: space-between;
+}
+.wp-title {
+  font-family: 'Cormorant Garamond', serif; font-size: 28px;
+  font-weight: 300; font-style: italic; color: var(--ink);
+}
+.wp-subtitle {
+  font-size: 11px; font-weight: 300; color: var(--muted);
+  margin-top: 2px; font-family: 'Raleway', sans-serif;
+}
+.wp-close {
+  background: none; border: none; cursor: none;
+  color: var(--muted); font-size: 18px; line-height: 1;
+  padding: 4px; margin-top: -2px;
+}
+.wp-close:hover { color: var(--crimson); }
+
+.wp-images {
+  overflow-y: auto; flex: 1; padding: 16px 24px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.wp-img-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px; background: var(--cream-mid);
+  border: 1px solid rgba(184,149,90,0.12);
+}
+.wp-thumb {
+  width: 56px; height: 56px; object-fit: cover; flex-shrink: 0;
+  border: 1px solid rgba(184,149,90,0.2);
+}
+.wp-img-url {
+  flex: 1; font-size: 10px; font-family: 'Raleway', sans-serif;
+  font-weight: 300; color: var(--muted); overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.wp-img-url a { color: var(--crimson); text-decoration: none; }
+.wp-img-url a:hover { text-decoration: underline; }
+.wp-remove {
+  background: none; border: none; cursor: none;
+  color: var(--muted); font-size: 14px; flex-shrink: 0; padding: 4px;
+}
+.wp-remove:hover { color: var(--crimson); }
+
+.wp-empty {
+  text-align: center; padding: 40px 24px;
+  font-family: 'Cormorant Garamond', serif; font-style: italic;
+  font-size: 18px; font-weight: 300; color: var(--muted);
+}
+
+/* email compose */
+.wp-email-section {
+  padding: 16px 24px 20px;
+  border-top: 1px solid rgba(184,149,90,0.15);
+  background: var(--cream-mid);
+}
+.wp-email-label {
+  font-size: 9px; font-weight: 600; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--gold);
+  margin-bottom: 8px; display: block;
+}
+.wp-email-input {
+  width: 100%; background: var(--cream); border: 1px solid rgba(184,149,90,0.25);
+  color: var(--ink); font-family: 'Raleway', sans-serif;
+  font-size: 12px; font-weight: 300; padding: 10px 13px;
+  outline: none; border-radius: 1px; transition: border-color .2s;
+  margin-bottom: 8px;
+}
+.wp-email-input:focus { border-color: var(--crimson); }
+.wp-email-input::placeholder { color: rgba(30,26,24,0.3); }
+
+.wp-compose-btn {
+  width: 100%; background: var(--crimson); color: var(--cream);
+  border: none; cursor: none; padding: 13px;
+  font-family: 'Raleway', sans-serif; font-size: 10px;
+  font-weight: 600; letter-spacing: 0.25em; text-transform: uppercase;
+  transition: background .2s; position: relative; overflow: hidden;
+}
+.wp-compose-btn::before {
+  content: ''; position: absolute; inset: 0;
+  background: var(--crimson-deep); transform: scaleX(0);
+  transform-origin: left; transition: transform .25s;
+}
+.wp-compose-btn:hover::before { transform: scaleX(1); }
+.wp-compose-btn span { position: relative; z-index: 1; }
+
+/* mailto note */
+.wp-mailto-note {
+  font-size: 10px; color: var(--muted); margin-top: 8px;
+  font-family: 'Raleway', sans-serif; font-weight: 300; line-height: 1.6;
+  text-align: center;
+}
+
+.wp-optin-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  margin-bottom: 10px; cursor: none; user-select: none;
+}
+.wp-optin-dot {
+  width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0;
+  border: 1px solid rgba(122,30,46,0.3); margin-top: 1px;
+  display: grid; place-items: center; transition: border-color .15s;
+}
+.wp-optin-dot::after {
+  content: ''; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--crimson); opacity: 0; transition: opacity .15s;
+}
+.wp-optin-row.checked .wp-optin-dot { border-color: var(--crimson); }
+.wp-optin-row.checked .wp-optin-dot::after { opacity: 1; }
+.wp-optin-text {
+  font-size: 11px; font-weight: 300; color: var(--ink-soft);
+  font-family: 'Raleway', sans-serif; line-height: 1.6;
+}
+
+/* ─── RESPONSIVE ──────────────────────────────── */
+@media (max-width: 600px) {
+  .cursor, .cursor-ring { display: none; }
+  body { cursor: auto; }
+  .btn-primary, .btn-ghost, .tool, .fill-toggle,
+  .wp-close, .wp-remove, .wp-compose-btn, #wishlist-btn { cursor: pointer; }
+  h1 { font-size: 38px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, .spin { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- ═══ SETUP ═══════════════════════════════════ -->
+<main id="setup">
+
+  <!-- decorative figure -->
+  <svg class="setup-figure" viewBox="0 0 420 900" preserveAspectRatio="xMaxYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <path d="M100 0 C95 60,88 130,92 190 C96 240,112 268,108 310 C104 348,96 365,100 400 C106 445,128 470,160 490 C192 510,230 515,240 515 C250 515,288 510,320 490 C352 470,374 445,380 400 C384 365,376 348,372 310 C368 268,384 240,388 190 C392 130,385 60,380 0" stroke="#7a1e2e" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M232 248 C236 244,240 243,244 244 C246 245,248 247,248 250" stroke="#7a1e2e" stroke-width="1" fill="none" stroke-linecap="round"/>
+    <path d="M108 310 C122 295,148 284,175 282 C195 281,210 285,220 295" stroke="#7a1e2e" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+    <path d="M372 310 C358 295,332 284,305 282 C285 281,270 285,260 295" stroke="#7a1e2e" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+    <path d="M104 398 C140 382,188 374,240 373 C292 374,340 382,376 398" stroke="#7a1e2e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path d="M106 415 C142 399,190 391,240 390 C290 391,338 399,374 415" stroke="#7a1e2e" stroke-width="1" fill="none" stroke-linecap="round" stroke-dasharray="6 5"/>
+  </svg>
+
+  <div class="setup-card">
+    <div class="km-eyebrow">
+      <div class="km-logo">km-ass</div>
+      <div class="km-rule"></div>
+      <div class="km-tag">Image Curation</div>
+    </div>
+
+    <h1>Swipe.<br><em>Desire.</em><br>Collect.</h1>
+    <p class="sub">Paste image links, move through them one at a time. Swipe down for next, left to skip — and swipe up for anything you love.</p>
+
+    <label class="field-label" for="input">Image links</label>
+    <textarea id="input" spellcheck="false"
+      placeholder="https://example.com/image-one.jpg&#10;https://example.com/image-two.png&#10;…one per line, or comma-separated"></textarea>
+
+    <p class="hint-note">
+      <strong>↓ next</strong> &nbsp;·&nbsp; <strong>← skip</strong> &nbsp;·&nbsp; <strong>↑ add to wishlist</strong> &nbsp;·&nbsp; <strong>→ also skip</strong>
+    </p>
+
+    <button class="fill-toggle" id="optFill" aria-pressed="false">
+      <span class="dot"></span>
+      Fill screen
+    </button>
+
+    <div class="btn-row">
+      <button class="btn-primary" id="startBtn" disabled>
+        <span>Begin</span>
+      </button>
+      <button class="btn-ghost" id="clearBtn">Clear</button>
+    </div>
+
+    <p class="count-bar" id="countBar">Waiting for links</p>
+  </div>
+</main>
+
+<!-- ═══ VIEWER ═══════════════════════════════════ -->
+<div id="viewer">
+  <div id="deck"></div>
+
+  <div class="hud top">
+    <div class="pos-badge">
+      <span id="posNow">1</span><i> / </i><span id="posAll">1</span>
+    </div>
+    <div class="tools">
+      <button class="tool" id="tFill" aria-pressed="false" title="Fill / fit (F)">⤢</button>
+      <button class="tool" id="tShuffle" title="Reshuffle (S)">⇄</button>
+      <button class="tool" id="tExit" title="Back (Esc)">✕</button>
+    </div>
+  </div>
+
+  <div class="hud bot">
+    <div class="swipe-hints" id="hints">
+      <span class="sh"><span class="arrow">←</span> skip</span>
+      <span class="sh"><span class="arrow">↓</span> next</span>
+      <span class="sh love"><span class="arrow">↑</span> love it</span>
+    </div>
+  </div>
+</div>
+
+<!-- love flash overlay -->
+<div id="love-flash">
+  <div class="love-inner">
+    <div class="love-glyph">♡</div>
+    <div class="love-label">added to your wishlist</div>
+  </div>
+</div>
+
+<!-- skip flash -->
+<div id="skip-flash"></div>
+
+<!-- wishlist float btn -->
+<button id="wishlist-btn" onclick="openWishlist()">
+  <span>Wishlist</span>
+  <span id="wishlist-count">0</span>
+</button>
+
+<!-- wishlist panel -->
+<div id="wishlist-panel">
+  <div class="wp-backdrop" onclick="closeWishlist()"></div>
+  <div class="wp-card">
+    <div class="wp-header">
+      <div>
+        <div class="wp-title">Your wishlist</div>
+        <div class="wp-subtitle" id="wp-sub">0 images saved</div>
+      </div>
+      <button class="wp-close" onclick="closeWishlist()">✕</button>
+    </div>
+
+    <div class="wp-images" id="wp-images">
+      <p class="wp-empty">Swipe up on an image you love — it'll appear here.</p>
+    </div>
+
+    <div class="wp-email-section">
+      <span class="wp-email-label">Send to yourself</span>
+      <input type="text" class="wp-email-input" id="toName"
+        placeholder="Your name (optional)">
+      <input type="email" class="wp-email-input" id="toEmail"
+        placeholder="your@email.com">
+      <label class="wp-optin-row">
+        <span class="wp-optin-dot" id="optinDot"></span>
+        <span class="wp-optin-text">Keep me in the loop — I'd like to hear from km-ass.com</span>
+        <input type="checkbox" id="optinCheck" style="display:none">
+      </label>
+      <button class="wp-compose-btn" onclick="sendEmail()">
+        <span>Draft email</span>
+      </button>
+      <p class="wp-mailto-note">
+        Opens your mail app with your wishlist pre-filled. km@km-ass.com is cc'd so we receive it too.
+      </p>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="picker" webkitdirectory directory multiple hidden accept="image/*">
+
+<script>
+(function () {
+'use strict';
+
+// ── Cursor ────────────────────────────────────────
+const cur = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+let mx = 0, my = 0, rx = 0, ry = 0;
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cur.style.left = mx + 'px'; cur.style.top = my + 'px';
+});
+(function animRing() {
+  rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12;
+  ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+  requestAnimationFrame(animRing);
+})();
+
+// ── State ─────────────────────────────────────────
+const POST = /(?:twitter|x)\.com\/[^\/\s]+\/status(?:es)?\/\d+/i;
+let detectedPlatform = null, order = [], idx = 0, axis = 'y';
+let slides = new Map(), folderFiles = [], wishlist = [];
+let W = window.innerWidth, H = window.innerHeight;
+let idleTimer = null, moveTimer = null;
+let opt = { cover: false };
+
+// ── Elements ──────────────────────────────────────
+const setup   = document.getElementById('setup');
+const viewer  = document.getElementById('viewer');
+const deck    = document.getElementById('deck');
+const input   = document.getElementById('input');
+const startBtn = document.getElementById('startBtn');
+const clearBtn = document.getElementById('clearBtn');
+const countBar = document.getElementById('countBar');
+const posNow  = document.getElementById('posNow');
+const posAll  = document.getElementById('posAll');
+const hints   = document.getElementById('hints');
+const loveFlash = document.getElementById('love-flash');
+const wishBtn = document.getElementById('wishlist-btn');
+const wishCount = document.getElementById('wishlist-count');
+const wpImages = document.getElementById('wp-images');
+const wpSub   = document.getElementById('wp-sub');
+
+// ── URL normalise ─────────────────────────────────
+function normalize(u) {
+  u = u.trim().replace(/[,;"'<>()\]]+$/, '');
+  const p = u.match(/^(https?:\/\/pbs\.twimg\.com\/(?:media|thumb)[a-z_]*\/[\w-]+)(?:\.(jpg|jpeg|png|webp))?(?:[?#].*)?$/i);
+  if (p) return p[1] + '?format=' + ((p[2] || 'jpg').toLowerCase() === 'jpeg' ? 'jpg' : (p[2] || 'jpg').toLowerCase()) + '&name=large';
+  const d = u.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?[^]*id=)([\w-]{20,})/);
+  if (d) return 'https://drive.google.com/uc?export=view&id=' + d[1];
+  if (/dropbox\.com/.test(u)) return u.replace(/[?&]dl=0/, '').replace(/[?&]raw=1/, '') + (u.indexOf('?') > -1 ? '&' : '?') + 'raw=1';
+  return u;
+}
+
+function parse(text) {
+  const found = text.match(/https?:\/\/[^\s,;"'<>]+/gi) || [];
+  const seen = {}, urls = []; let posts = 0;
+  for (const raw of found) {
+    const r = raw.trim().replace(/[,;"'<>()\]]+$/, '');
+    if (POST.test(r)) { posts++; continue; }
+    const u = normalize(r);
+    if (!u || seen[u]) continue;
+    seen[u] = 1; urls.push(u);
+  }
+  return { urls, posts };
+}
+
+function refreshCount() {
+  const r = parse(input.value);
+  const total = r.urls.length + folderFiles.length;
+  startBtn.disabled = total === 0;
+  if (!total && !r.posts) { countBar.textContent = 'Waiting for links'; return; }
+  const bits = [];
+  if (r.urls.length) bits.push('<b>' + r.urls.length + '</b> link' + (r.urls.length === 1 ? '' : 's'));
+  if (folderFiles.length) bits.push('<b>' + folderFiles.length + '</b> local file' + (folderFiles.length === 1 ? '' : 's'));
+  let msg = bits.join(' · ') + ' ready';
+  if (r.posts) msg += '<br><u>' + r.posts + ' post link' + (r.posts === 1 ? '' : 's') + ' skipped</u>';
+  countBar.innerHTML = msg;
+}
+
+// ── Fill toggle ───────────────────────────────────
+function syncFill() {
+  document.getElementById('optFill').setAttribute('aria-pressed', String(opt.cover));
+  document.getElementById('tFill').setAttribute('aria-pressed', String(opt.cover));
+  document.body.classList.toggle('cover', opt.cover);
+}
+function toggleFill() { opt.cover = !opt.cover; syncFill(); }
+document.getElementById('optFill').onclick = toggleFill;
+document.getElementById('tFill').onclick = toggleFill;
+
+// ── Clear / folder ────────────────────────────────
+clearBtn.onclick = () => { input.value = ''; folderFiles = []; document.getElementById('picker').value = ''; refreshCount(); input.focus(); };
+document.getElementById('picker').onchange = function () {
+  folderFiles = Array.prototype.slice.call(this.files || []).filter(f => /^image\//.test(f.type) || /\.(jpe?g|png|gif|webp|avif)$/i.test(f.name));
+  folderFiles.sort((a, b) => a.name.localeCompare(b.name));
+  refreshCount();
+};
+input.addEventListener('input', refreshCount);
+
+// ── Deck helpers ──────────────────────────────────
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function itemAt(pos) { const n = order.length; return order[((pos % n) + n) % n]; }
+function srcOf(item) {
+  if (item.src) return item.src;
+  if (!item.blob) item.blob = URL.createObjectURL(item.file);
+  return item.blob;
+}
+
+function ensure(pos) {
+  if (slides.has(pos)) return;
+  const slide = document.createElement('div');
+  slide.className = 'slide'; slide.dataset.pos = pos;
+  deck.appendChild(slide); slides.set(pos, slide);
+  const item = itemAt(pos);
+  const url = srcOf(item);
+  const spin = document.createElement('div'); spin.className = 'spin'; slide.appendChild(spin);
+  const img = document.createElement('img'); img.alt = ''; img.decoding = 'async';
+  img.addEventListener('load', () => {
+    const show = () => { spin.remove(); img.classList.add('in'); };
+    img.decode ? img.decode().then(show, show) : show();
+  });
+  img.addEventListener('error', () => {
+    slide.innerHTML = '';
+    const p = document.createElement('p'); p.className = 'broken';
+    p.innerHTML = '<strong>would not load</strong>';
+    if (item.src) { const a = document.createElement('a'); a.href = item.src; a.target = '_blank'; a.rel = 'noopener'; a.textContent = item.src; p.appendChild(a); }
+    else p.appendChild(document.createTextNode(item.file.name));
+    slide.appendChild(p);
+  });
+  img.src = url; slide.appendChild(img);
+}
+
+function prune() {
+  slides.forEach((el, pos) => { if (Math.abs(pos - idx) > 3) { el.remove(); slides.delete(pos); } });
+}
+
+function layout(animate, dx, dy) {
+  dx = dx || 0; dy = dy || 0;
+  deck.classList.add('moving'); clearTimeout(moveTimer);
+  moveTimer = setTimeout(() => deck.classList.remove('moving'), animate ? 340 : 80);
+  slides.forEach((el, pos) => {
+    const d = pos - idx;
+    const x = axis === 'x' ? d * W + dx : 0;
+    const y = axis === 'y' ? d * H + dy : 0;
+    el.style.transition = animate ? 'transform 280ms cubic-bezier(.22,.61,.36,1)' : 'none';
+    el.style.transform = 'translate3d(' + x + 'px,' + y + 'px,0)';
+  });
+}
+
+function go(step) {
+  idx += step;
+  for (let p = idx - 2; p <= idx + 3; p++) ensure(p);
+  layout(true);
+  posNow.textContent = (((idx % order.length) + order.length) % order.length) + 1;
+  prune(); wake();
+}
+
+// ── Love / wishlist ───────────────────────────────
+function loveCurrent() {
+  const item = itemAt(idx);
+  const url = item.src || (item.file ? item.file.name : null);
+  if (!url) return;
+  // avoid duplicates
+  if (wishlist.some(w => w.url === url)) { go(1); return; }
+  wishlist.push({ url, thumb: srcOf(item) });
+  flashLove();
+  updateWishlistUI();
+  go(1);
+}
+
+let loveTimer;
+function flashLove() {
+  loveFlash.classList.add('show');
+  clearTimeout(loveTimer);
+  loveTimer = setTimeout(() => loveFlash.classList.remove('show'), 900);
+}
+
+function updateWishlistUI() {
+  const n = wishlist.length;
+  wishCount.textContent = n;
+  wishBtn.classList.toggle('visible', n > 0);
+  wpSub.textContent = n + ' image' + (n === 1 ? '' : 's') + ' saved';
+  renderWishlistImages();
+}
+
+function renderWishlistImages() {
+  if (!wishlist.length) {
+    wpImages.innerHTML = '<p class="wp-empty">Swipe up on an image you love — it\'ll appear here.</p>';
+    return;
+  }
+  wpImages.innerHTML = '';
+  wishlist.forEach((item, i) => {
+    const row = document.createElement('div'); row.className = 'wp-img-row';
+    const thumb = document.createElement('img'); thumb.className = 'wp-thumb';
+    thumb.src = item.thumb; thumb.alt = ''; thumb.onerror = () => { thumb.style.display = 'none'; };
+    const urlDiv = document.createElement('div'); urlDiv.className = 'wp-img-url';
+    if (item.url.startsWith('http')) {
+      const a = document.createElement('a'); a.href = item.url; a.target = '_blank';
+      a.rel = 'noopener'; a.textContent = item.url; urlDiv.appendChild(a);
+    } else { urlDiv.textContent = item.url; }
+    const rm = document.createElement('button'); rm.className = 'wp-remove';
+    rm.textContent = '×'; rm.title = 'Remove'; rm.onclick = () => { wishlist.splice(i, 1); updateWishlistUI(); };
+    row.appendChild(thumb); row.appendChild(urlDiv); row.appendChild(rm);
+    wpImages.appendChild(row);
+  });
+}
+
+function openWishlist() { document.getElementById('wishlist-panel').classList.add('open'); }
+function closeWishlist() { document.getElementById('wishlist-panel').classList.remove('open'); }
+
+function sendEmail() {
+  const to = document.getElementById('toEmail').value.trim();
+  const name = document.getElementById('toName').value.trim();
+  const optin = document.getElementById('optinCheck').checked;
+  if (!wishlist.length) { alert('Your wishlist is empty.'); return; }
+  if (!to) { alert('Please enter your email address.'); document.getElementById('toEmail').focus(); return; }
+
+  const links = wishlist.map((item, i) => (i + 1) + '. ' + item.url).join('\n');
+  const greeting = name ? 'Hi — this is ' + name + '.\n\n' : '';
+  const optinLine = optin
+    ? '\n\nPlease add me to future communications from km-ass.com.'
+    : '';
+  const subject = encodeURIComponent('My km-ass.com wishlist');
+  const body = encodeURIComponent(
+    greeting +
+    'Here are the images I loved:\n\n' + links +
+    optinLine +
+    '\n\n—\nCurated via km-ass.com'
+  );
+  // cc km@km-ass.com so the site receives a copy
+  const mailto = 'mailto:' + to + '?cc=km%40km-ass.com&subject=' + subject + '&body=' + body;
+  window.location.href = mailto;
+}
+
+// opt-in toggle
+document.querySelector('.wp-optin-row').addEventListener('click', function () {
+  const cb = document.getElementById('optinCheck');
+  cb.checked = !cb.checked;
+  this.classList.toggle('checked', cb.checked);
+});
+
+// ── Gestures ──────────────────────────────────────
+let dragging = false, sx = 0, sy = 0, dx = 0, dy = 0;
+let locked = false, t0 = 0;
+
+viewer.addEventListener('pointerdown', e => {
+  if (e.target.closest('.tool, #wishlist-btn, #wishlist-panel')) return;
+  dragging = true; locked = false; dx = dy = 0;
+  sx = e.clientX; sy = e.clientY; t0 = Date.now();
+  layout(false); wake();
+});
+viewer.addEventListener('pointermove', e => {
+  if (!dragging) return;
+  dx = e.clientX - sx; dy = e.clientY - sy;
+  if (!locked) {
+    if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+    axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+    locked = true;
+  }
+  layout(false, axis === 'x' ? dx : 0, axis === 'y' ? dy : 0);
+});
+
+function release() {
+  if (!dragging) return;
+  dragging = false;
+  if (!locked) { layout(true); return; }
+
+  const distX = dx, distY = dy;
+  const spanX = W, spanY = H;
+  const elapsed = Math.max(1, Date.now() - t0);
+  const fastX = Math.abs(distX) / elapsed > 0.45;
+  const fastY = Math.abs(distY) / elapsed > 0.45;
+
+  if (axis === 'y') {
+    if (distY < 0 && (Math.abs(distY) > spanY * 0.18 || fastY)) {
+      // swipe UP = love
+      loveCurrent();
+    } else if (distY > 0 && (Math.abs(distY) > spanY * 0.18 || fastY)) {
+      // swipe DOWN = next
+      axis = 'y'; go(1);
+    } else {
+      layout(true);
+    }
+  } else {
+    // horizontal: either direction = skip
+    if (Math.abs(distX) > spanX * 0.18 || fastX) {
+      axis = 'x'; go(distX < 0 ? 1 : -1);
+    } else {
+      layout(true);
+    }
+  }
+}
+viewer.addEventListener('pointerup', release);
+viewer.addEventListener('pointercancel', release);
+
+viewer.addEventListener('wheel', e => {
+  if (Math.abs(e.deltaY) < 24) return;
+  const now = Date.now(); if (now - (viewer._lw || 0) < 300) return;
+  viewer._lw = now; axis = 'y'; go(e.deltaY > 0 ? 1 : -1);
+}, { passive: true });
+
+document.addEventListener('keydown', e => {
+  if (!viewer.classList.contains('on')) return;
+  const k = e.key.toLowerCase();
+  if (k === 'arrowdown' || k === ' ') { e.preventDefault(); axis = 'y'; go(1); }
+  else if (k === 'arrowup') { e.preventDefault(); loveCurrent(); }
+  else if (k === 'arrowleft') { e.preventDefault(); axis = 'x'; go(1); }
+  else if (k === 'arrowright') { e.preventDefault(); axis = 'x'; go(-1); }
+  else if (k === 'f') toggleFill();
+  else if (k === 's') reshuffle();
+  else if (k === 'escape') exit();
+  else if (k === 'w') openWishlist();
+});
+
+window.addEventListener('resize', () => { W = window.innerWidth; H = window.innerHeight; layout(false); });
+
+function wake() {
+  viewer.classList.remove('idle');
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => viewer.classList.add('idle'), 2800);
+}
+
+// ── Lifecycle ─────────────────────────────────────
+function rebuild() {
+  slides.forEach(el => el.remove()); slides.clear();
+  for (let p = -2; p <= 3; p++) ensure(p);
+  layout(false);
+  posNow.textContent = (((idx % order.length) + order.length) % order.length) + 1;
+  wake();
+}
+
+function boot() {
+  const r = parse(input.value);
+  const items = r.urls.map(u => ({ src: u }))
+    .concat(folderFiles.map(f => ({ file: f })));
+  if (!items.length) return;
+  order = shuffle(items); idx = 0; axis = 'y';
+  posAll.textContent = order.length;
+  syncFill();
+  setup.style.display = 'none';
+  viewer.classList.add('on');
+  deck.innerHTML = '';
+  rebuild();
+  // hints fade after 3s
+  setTimeout(() => { hints.style.transition = 'opacity 1s'; hints.style.opacity = '0'; }, 3000);
+  setTimeout(() => { hints.style.display = 'none'; }, 4000);
+}
+
+function reshuffle() { order = shuffle(order.slice()); idx = 0; rebuild(); }
+function exit() {
+  viewer.classList.remove('on'); setup.style.display = 'flex';
+  hints.style.opacity = '1'; hints.style.display = 'flex'; hints.style.transition = '';
+}
+
+startBtn.onclick = boot;
+document.getElementById('tShuffle').onclick = reshuffle;
+document.getElementById('tExit').onclick = exit;
+
+refreshCount();
+syncFill();
+})();
+</script>
+</body>
+</html>
